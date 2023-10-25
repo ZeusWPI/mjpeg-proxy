@@ -145,11 +145,17 @@ func infoEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{}
 	connections := map[string]interface{}{}
+	remoteAddrs := make(map[string][]string)
 
 	for _, pubSub := range pubSubs {
 		connections[pubSub.id] = len(pubSub.subscribers)
+		remoteAddrs[pubSub.id] = make([]string, 0)
+		for sub := range pubSub.subscribers {
+			remoteAddrs[pubSub.id] = append(remoteAddrs[pubSub.id], sub.RemoteAddr)
+		}
 	}
 	data["connections"] = connections
+	data["remote_addresses"] = remoteAddrs
 	json.NewEncoder(w).Encode(data)
 }
 
