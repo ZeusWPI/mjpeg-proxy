@@ -35,13 +35,14 @@ type Subscriber struct {
 }
 
 type PubSub struct {
-	id          string
-	chunker     *Chunker
-	pubChan     chan []byte
-	subChan     chan *Subscriber
-	unsubChan   chan *Subscriber
-	subscribers map[*Subscriber]struct{}
-	stopTimer   *time.Timer
+	id                    string
+	chunker               *Chunker
+	pubChan               chan []byte
+	subChan               chan *Subscriber
+	unsubChan             chan *Subscriber
+	subscribers           map[*Subscriber]struct{}
+	stopTimer             *time.Timer
+	streamDurationSeconds float64
 }
 
 func NewSubscriber(client string) *Subscriber {
@@ -53,7 +54,7 @@ func NewSubscriber(client string) *Subscriber {
 	return sub
 }
 
-func NewPubSub(id string, chunker *Chunker) *PubSub {
+func NewPubSub(id string, chunker *Chunker, streamDuration float64) *PubSub {
 	pubSub := new(PubSub)
 
 	pubSub.id = id
@@ -62,6 +63,7 @@ func NewPubSub(id string, chunker *Chunker) *PubSub {
 	pubSub.unsubChan = make(chan *Subscriber)
 	pubSub.subscribers = make(map[*Subscriber]struct{})
 	pubSub.stopTimer = time.NewTimer(0)
+	pubSub.streamDurationSeconds = streamDuration
 	<-pubSub.stopTimer.C
 
 	return pubSub
@@ -240,6 +242,13 @@ func (pubSub *PubSub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var data []byte
 	var chunkOk, headersSent bool
 	var lastSendTime time.Time
+	var endTime time.Time
+	if pubSub.streamDurationSeconds != 0 {
+		endTime = time.Now().Add(time.Duration(pubSub.streamDurationSeconds * float64(time.Second)))
+	} else {
+		// Should be long enough
+		endTime = time.Now().Add(time.Duration(365 * 24 * time.Hour))
+	}
 
 LOOP:
 	for {
@@ -253,6 +262,9 @@ LOOP:
 			break LOOP
 		}
 
+		if time.Now().After(endTime) {
+			break LOOP
+		}
 		// send HTTP header before first chunk
 		if !headersSent {
 			header := w.Header()

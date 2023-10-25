@@ -41,20 +41,22 @@ var (
 )
 
 type configSource struct {
-	Source   string
-	Username string
-	Password string
-	Digest   bool
-	Path     string
-	Rate     float64
+	Source          string
+	Username        string
+	Password        string
+	Digest          bool
+	Path            string
+	Rate            float64
+	DurationSeconds float64
 }
 
-func startSource(source, username, password, proxyUrl string, digest bool, rate float64) error {
+func startSource(source, username, password, proxyUrl string, digest bool, rate float64, durationSeconds float64) error {
 	chunker, err := NewChunker(proxyUrl, source, username, password, digest, rate)
 	if err != nil {
 		return fmt.Errorf("chunker[%s]: create failed: %s", proxyUrl, err)
 	}
-	pubSub := NewPubSub(proxyUrl, chunker)
+
+	pubSub := NewPubSub(proxyUrl, chunker, durationSeconds)
 	pubSub.Start()
 	pubSubs = append(pubSubs, *pubSub)
 
@@ -89,7 +91,7 @@ func loadConfig(filename string) error {
 			return fmt.Errorf("duplicate proxy path: %s", conf.Path)
 		}
 
-		err = startSource(conf.Source, conf.Username, conf.Password, conf.Path, conf.Digest, conf.Rate)
+		err = startSource(conf.Source, conf.Username, conf.Password, conf.Path, conf.Digest, conf.Rate, conf.DurationSeconds)
 		if err != nil {
 			return err
 		}
@@ -183,7 +185,7 @@ func main() {
 	if *sources != "" {
 		err = loadConfig(*sources)
 	} else {
-		err = startSource(*source, *username, *password, *path, *digest, *rate)
+		err = startSource(*source, *username, *password, *path, *digest, *rate, 0)
 	}
 	if err != nil {
 		fmt.Println("config:", err)
