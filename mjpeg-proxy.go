@@ -170,6 +170,7 @@ func main() {
 	bind := flag.String("bind", ":8080", "proxy bind address")
 	path := flag.String("path", "/", "proxy serving path")
 	rate := flag.Float64("rate", 0, "limit output frame rate")
+	duration := flag.Float64("durationseconds", 0, "time before client is disconnected")
 	maxprocs := flag.Int("maxprocs", 0, "limit number of CPUs used")
 	flag.DurationVar(&frameTimeout, "frametimeout", 60*time.Second, "limit waiting for next frame")
 	flag.DurationVar(&stopDelay, "stopduration", 60*time.Second, "follow source after last client")
@@ -185,7 +186,7 @@ func main() {
 	if *sources != "" {
 		err = loadConfig(*sources)
 	} else {
-		err = startSource(*source, *username, *password, *path, *digest, *rate, 0)
+		err = startSource(*source, *username, *password, *path, *digest, *rate, *duration)
 	}
 	if err != nil {
 		fmt.Println("config:", err)
