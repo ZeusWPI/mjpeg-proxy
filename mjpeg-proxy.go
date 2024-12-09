@@ -175,7 +175,7 @@ func main() {
 	flag.DurationVar(&frameTimeout, "frametimeout", 60*time.Second, "limit waiting for next frame")
 	flag.DurationVar(&stopDelay, "stopduration", 60*time.Second, "follow source after last client")
 	flag.IntVar(&tcpSendBuffer, "sendbuffer", 4096, "limit buffering of frames")
-	flag.StringVar(&clientHeader, "clientheader", "", "request header with client address")
+	flag.StringVar(&clientHeader, "clientheader", "X-Forwarded-For", "request header with client address")
 	flag.Parse()
 
 	if *maxprocs > 0 {
