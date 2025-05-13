@@ -1,6 +1,6 @@
 [
    {
-      "Source" : "http://10.0.0.7/video/mjpg.cgi",
+      "Source" : "http://192.168.0.11/video/mjpg.cgi",
       "Path": "/",
       "DurationSeconds" : 300
    }
